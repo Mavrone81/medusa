@@ -1,0 +1,20 @@
+# Medusa admin (static SPA) — container: medusa-web.
+# Host nginx terminates TLS for med.awakenfs.store and proxies to 127.0.0.1:20021.
+#
+# Deploy (rebuild ONLY this app's service; nothing else on the shared host is touched):
+#   MEDUSA_BACKEND_URL=https://med.awakenfs.store docker compose up -d --build web
+#
+# This service has NO database and NO volumes — it is a pure frontend, so a
+# rebuild can never destroy persistent data. Do not add `down -v` to any deploy path.
+services:
+  web:
+    build:
+      context: .
+      args:
+        # Baked into the bundle at build time (see Dockerfile / vite.config.ts).
+        MEDUSA_BACKEND_URL: ${MEDUSA_BACKEND_URL:-https://med.awakenfs.store}
+    container_name: medusa-web
+    restart: unless-stopped
+    # Bound to localhost only — public traffic arrives via host nginx, not directly.
+    ports:
+      - "127.0.0.1:${MEDUSA_WEB_PORT:-20021}:80"
